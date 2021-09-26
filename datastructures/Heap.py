@@ -202,7 +202,7 @@ class DHeap:
 
         current_priority = self.pairs[first_children_idx][1]
         current_idx = first_children_idx
-        for i in range(first_children_idx, last_children_idx + 1):
+        for i in range(first_children_idx, last_children_idx):
             if not self.comparator(current_priority, self.pairs[i][1]):
                 current_priority = self.pairs[i][1]
                 current_idx = i
