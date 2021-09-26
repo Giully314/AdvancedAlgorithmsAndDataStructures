@@ -35,7 +35,7 @@ class DHeap:
             raise ValueError("The comparator should be 'max' or 'min'.")
 
 
-        self.pairs: list[tuple[Any, int]] = []
+        self._pairs: list[tuple[Any, int]] = []
 
         if elements is not None and priorities is not None:
             self.__heapify(elements, priorities)
@@ -54,7 +54,7 @@ class DHeap:
         """
         
         pair = (element, priority)
-        self.pairs.append(pair)
+        self._pairs.append(pair)
         self.__bubble_up(len(self) - 1)
 
 
@@ -70,12 +70,12 @@ class DHeap:
         if self.empty():
             raise IndexError("Empty heap.")
         
-        last_leaf = self.pairs.pop()
+        last_leaf = self._pairs.pop()
         if self.empty():
             return last_leaf[0]
 
-        root = self.pairs[0]
-        self.pairs[0] = last_leaf
+        root = self._pairs[0]
+        self._pairs[0] = last_leaf
         self.__push_down(0)
 
         return root[0]
@@ -96,9 +96,9 @@ class DHeap:
         if idx == -1:
             raise IndexError("The element is not in the heap.")
 
-        last_leaf = self.pairs.pop()
-        _, priority = self.pairs[idx]
-        self.pairs[idx] = last_leaf
+        last_leaf = self._pairs.pop()
+        _, priority = self._pairs[idx]
+        self._pairs[idx] = last_leaf
 
         
         if self.comparator(priority, last_leaf[1]):
@@ -117,7 +117,7 @@ class DHeap:
         if self.empty():
             raise IndexError("Empty heap.")
 
-        return self.pairs[0][0]
+        return self._pairs[0][0]
 
 
     def contains(self, element: Any) -> bool:
@@ -147,8 +147,8 @@ class DHeap:
             raise IndexError("The element is not in the heap.")
 
 
-        old_priority = self.pairs[element_idx][1]
-        self.pairs[element_idx] = (element, new_priority)
+        old_priority = self._pairs[element_idx][1]
+        self._pairs[element_idx] = (element, new_priority)
 
         if self.comparator(new_priority, old_priority):
             self.__bubble_up(element_idx)
@@ -161,7 +161,7 @@ class DHeap:
         return len(self) == 0
     
     def __len__(self):
-        return len(self.pairs)
+        return len(self._pairs)
 
     # ******************************* END OF PUBLIC INTERFACE *****************************************
 
@@ -177,7 +177,7 @@ class DHeap:
             return the position of the element if is present else -1.
         """
 
-        for i, pair in enumerate(self.pairs):
+        for i, pair in enumerate(self._pairs):
             if pair[0] == element:
                 return i
         return -1
@@ -200,11 +200,11 @@ class DHeap:
         first_children_idx = self.__get_first_children_idx(parent_idx)
         last_children_idx = min(first_children_idx + self.d, len(self))
 
-        current_priority = self.pairs[first_children_idx][1]
+        current_priority = self._pairs[first_children_idx][1]
         current_idx = first_children_idx
         for i in range(first_children_idx, last_children_idx):
-            if not self.comparator(current_priority, self.pairs[i][1]):
-                current_priority = self.pairs[i][1]
+            if not self.comparator(current_priority, self._pairs[i][1]):
+                current_priority = self._pairs[i][1]
                 current_idx = i
         
         return current_idx
@@ -222,19 +222,19 @@ class DHeap:
             idx: index of the node to check.
         """
 
-        current = self.pairs[idx]
+        current = self._pairs[idx]
 
         parent_idx = self.__get_parent_index(idx)
         while idx > 0:
-            #remember that self.pairs is a list of tuple where tuple[1] is the priority
-            if self.comparator(current[1], self.pairs[parent_idx][1]): 
-                self.pairs[idx] = self.pairs[parent_idx]
+            #remember that self._pairs is a list of tuple where tuple[1] is the priority
+            if self.comparator(current[1], self._pairs[parent_idx][1]): 
+                self._pairs[idx] = self._pairs[parent_idx]
                 idx = parent_idx
                 parent_idx = self.__get_parent_index(idx)
             else:
                 break
 
-        self.pairs[idx] = current
+        self._pairs[idx] = current
 
     
     def __push_down(self, idx: int) -> None:
@@ -245,19 +245,19 @@ class DHeap:
             idx: index of the node to check.
         """
 
-        current = self.pairs[idx]
+        current = self._pairs[idx]
         first_leaf_idx = self.__get_first_leaf_idx()
         while idx < first_leaf_idx:
             first_priority_children_idx = self.__get_first_priority_children_idx(idx)
-            first_priority_children = self.pairs[first_priority_children_idx]
+            first_priority_children = self._pairs[first_priority_children_idx]
 
             if not self.comparator(current[1], first_priority_children[1]):
-                self.pairs[idx] = self.pairs[first_priority_children_idx]
+                self._pairs[idx] = self._pairs[first_priority_children_idx]
                 idx = first_priority_children_idx
             else:
                 break
 
-        self.pairs[idx] = current
+        self._pairs[idx] = current
 
     
     def __heapify(self, elements: list[Any], priorities: list[int]) -> None:
@@ -271,9 +271,29 @@ class DHeap:
 
         assert(len(elements) == len(priorities))
 
-        self.pairs = list(zip(elements, priorities))
+        self._pairs = list(zip(elements, priorities))
         first_leaf_idx = self.__get_first_leaf_idx() - 1
         for i in range(first_leaf_idx, -1, -1):
             self.__push_down(i)
 
+    #this function is taken from: 
+    # https://github.com/mlarocca/AlgorithmsAndDataStructuresInAction/blob/master/Python/mlarocca/datastructures/heap/dway_heap.py
+    def _validate(self) -> bool:
+        """Checks that the three invariants for heaps are abided by.
+        1.	Every node has at most `D` children. (Guaranteed by construction)
+        2.	The heap tree is complete and left-adjusted.(Also guaranteed by construction)
+        3.	Every node holds the highest priority in the subtree rooted at that node.
+        Returns: True if all the heap invariants are met.
+        """
+        current_index = 0
+        first_leaf = self.__get_first_leaf_idx()
+        while current_index < first_leaf:
+            current_priority: float = self._pairs[current_index][1]
+            first_child = self.__get_first_children_idx(current_index)
+            last_child_guard = min(first_child + self.d, len(self))
+            for child_index in range(first_child, last_child_guard):
+                if current_priority <= self._pairs[child_index][1]:
+                    return False
+            current_index += 1
+        return True
     
