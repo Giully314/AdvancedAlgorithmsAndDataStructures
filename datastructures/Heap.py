@@ -72,7 +72,7 @@ class DHeap:
         
         last_leaf = self.pairs.pop()
         if self.empty():
-            return last_leaf
+            return last_leaf[0]
 
         root = self.pairs[0]
         self.pairs[0] = last_leaf
@@ -246,13 +246,14 @@ class DHeap:
         """
 
         current = self.pairs[idx]
-        while idx < self.__get_first_leaf_idx():
+        first_leaf_idx = self.__get_first_leaf_idx()
+        while idx < first_leaf_idx:
             first_priority_children_idx = self.__get_first_priority_children_idx(idx)
             first_priority_children = self.pairs[first_priority_children_idx]
 
             if not self.comparator(current[1], first_priority_children[1]):
                 self.pairs[idx] = self.pairs[first_priority_children_idx]
-                idx = first_priority_children
+                idx = first_priority_children_idx
             else:
                 break
 
