@@ -152,7 +152,7 @@ class DHeap:
 
         if self.comparator(new_priority, old_priority):
             self.__bubble_up(element_idx)
-        elif not self.comparator(new_priority, old_priority):
+        else:
             self.__push_down(element_idx)
 
 
