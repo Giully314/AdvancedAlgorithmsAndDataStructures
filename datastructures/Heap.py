@@ -222,19 +222,19 @@ class DHeap:
             idx: index of the node to check.
         """
 
-        current = self.elements[idx]
+        current = self.pairs[idx]
 
         while parent_idx > 0:
             parent_idx = self.__get_parent_index(idx)
 
             #remember that self.pairs is a list of tuple where tuple[1] is the priority
-            if self.comparator(current[1], self.elements[parent_idx][1]): 
-                self.elements[idx] = self.elements[parent_idx]
+            if self.comparator(current[1], self.pairs[parent_idx][1]): 
+                self.pairs[idx] = self.pairs[parent_idx]
                 idx = self.__get_parent_index(parent_idx)
             else:
                 break
 
-        self.elements[idx] = current
+        self.pairs[idx] = current
 
     
     def __push_down(self, idx: int) -> None:
@@ -245,18 +245,18 @@ class DHeap:
             idx: index of the node to check.
         """
 
-        current = self.elements[idx]
+        current = self.pairs[idx]
         while idx < self.__get_first_leaf_idx():
             first_priority_children_idx = self.__get_first_priority_children_idx(idx)
-            first_priority_children = self.elements[first_priority_children_idx]
+            first_priority_children = self.pairs[first_priority_children_idx]
 
             if not self.comparator(current[1], first_priority_children[1]):
-                self.elements[idx] = self.elements[first_priority_children_idx]
+                self.pairs[idx] = self.pairs[first_priority_children_idx]
                 idx = first_priority_children
             else:
                 break
 
-        self.elements[idx] = current
+        self.pairs[idx] = current
 
     
     def __heapify(self, elements: list[Any], priorities: list[int]) -> None:
