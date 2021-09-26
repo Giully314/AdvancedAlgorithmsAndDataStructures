@@ -98,7 +98,16 @@ class DHeap:
 
 
     def contains(self, element: Any) -> bool:
-        pass 
+        """
+        Running time: O(n).
+
+        Args:
+            element: the element to search.
+        Return:
+            return true if the element is present else false.
+        """
+        return self.__find(element) >= 0
+        
 
     def update(self, element: Any, new_priority: int) -> None:
         """
@@ -107,7 +116,6 @@ class DHeap:
         Args:
             element: an object.
             new_priority: the new priority.
-
         """
 
         element_idx = self.__find(element)
