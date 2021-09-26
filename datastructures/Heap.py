@@ -163,7 +163,8 @@ class DHeap:
     def __get_first_priority_children_idx(self, parent_idx: int) -> int:
         """
         Return:
-            The children with the highest/lower priority (depends if the heap is max or min). 
+            The children with the highest/lower priority (depends if the heap is max or min).
+            If there are multiple children with the same priority, return the leftmost.
         """
         first_children_idx = self.__get_first_children_idx(parent_idx)
         last_children_idx = min(first_children_idx + self.d, len(self))
