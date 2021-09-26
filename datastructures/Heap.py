@@ -292,7 +292,7 @@ class DHeap:
             first_child = self.__get_first_children_idx(current_index)
             last_child_guard = min(first_child + self.d, len(self))
             for child_index in range(first_child, last_child_guard):
-                if current_priority <= self._pairs[child_index][1]:
+                if current_priority < self._pairs[child_index][1]:
                     return False
             current_index += 1
         return True
