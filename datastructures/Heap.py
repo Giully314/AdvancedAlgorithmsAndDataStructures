@@ -5,6 +5,7 @@ from typing import Any, Callable
 #priorities, a better implementation could be to divide into 2 arrays the elements and the priorities and work only with the last for 
 #the actual move around.
 #TODO: run test to examine this theory.
+#TODO: think if it's better to raise an exception or return a boolean in: update, remove.
 
 class DHeap:
     """
@@ -81,7 +82,29 @@ class DHeap:
 
 
     def remove(self, element: Any) -> None:
-        pass 
+        """
+        Remove the given element if present. Use this function with caution, because it's slow. (There is a search, possible reallocation
+        of the underlying list and a call to function which restores the heap invariants.)
+        Running time: O(n).
+
+        Args:
+            element: the element to remove.
+        """
+
+        idx = self.__find(element)
+
+        if idx == -1:
+            raise IndexError("The element is not in the heap.")
+
+        last_leaf = self.pairs.pop()
+        _, priority = self.pairs[idx]
+        self.pairs[idx] = last_leaf
+
+        
+        if self.comparator(priority, last_leaf[1]):
+            self.__push_down(idx)
+        else:
+            self.__bubble_up(idx)
 
 
     def peek(self) -> Any:
@@ -107,7 +130,7 @@ class DHeap:
             return true if the element is present else false.
         """
         return self.__find(element) >= 0
-        
+
 
     def update(self, element: Any, new_priority: int) -> None:
         """
