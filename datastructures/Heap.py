@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 class DHeap:
     """
-    A DHeap data structure. The data structure assume that there are no equals priorities (TODO: support equals priorities).
+    A DHeap data structure. The data structure assume that there are no equals priorities (TODO: support equals priorities (SOLVED)).
     This implementation doesn't use auxiliary data structure for speed up search (with an hash table for example); if you need to
     do a lot of search, update priorities or remove elements, this implementation is not good for your case.
     """
@@ -275,4 +275,5 @@ class DHeap:
         first_leaf_idx = self.__get_first_leaf_idx() - 1
         for i in range(first_leaf_idx, -1, -1):
             self.__push_down(i)
+
     
