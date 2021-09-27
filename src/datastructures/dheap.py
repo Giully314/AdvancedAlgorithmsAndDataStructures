@@ -38,7 +38,7 @@ class DHeap:
         self._pairs: list[tuple[Any, int]] = []
 
         if elements is not None and priorities is not None:
-            self.__heapify(elements, priorities)
+            self._heapify(elements, priorities)
 
 
     # ******************************* PUBLIC INTERFACE *****************************************
