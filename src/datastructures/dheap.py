@@ -260,7 +260,7 @@ class DHeap:
         self._pairs[idx] = current
 
     
-    def __heapify(self, elements: list[Any], priorities: list[int]) -> None:
+    def _heapify(self, elements: list[Any], priorities: list[int]) -> None:
         """
         Construct an heap from a list of elements and priorities.
 
@@ -275,6 +275,7 @@ class DHeap:
         first_leaf_idx = self.__get_first_leaf_idx() - 1
         for i in range(first_leaf_idx, -1, -1):
             self.__push_down(i)
+        
 
     #this function is taken from: 
     # https://github.com/mlarocca/AlgorithmsAndDataStructuresInAction/blob/master/Python/mlarocca/datastructures/heap/dway_heap.py
