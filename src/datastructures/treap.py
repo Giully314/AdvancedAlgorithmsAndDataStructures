@@ -86,7 +86,7 @@ class Treap:
 
         y = x.parent
         if y.right != x:
-            raise Exception("Right rotation can only be applied to a left child.")
+            raise Exception("Left rotation can only be applied to a right child.")
 
         p = y.parent
         if p == None:
