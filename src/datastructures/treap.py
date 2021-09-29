@@ -13,26 +13,42 @@ class Node:
 
     key: Any
     priority: float
-    parent: Optional["Node"] = None
-    left: Optional["Node"] = None
-    right: Optional["Node"] = None
+    _parent: Optional["Node"] = None
+    _left: Optional["Node"] = None
+    _right: Optional["Node"] = None
+
+    
+    @property
+    def parent(self) -> Optional["Node"]:
+        return self._parent
+    
+    @property
+    def left(self) -> Optional["Node"]:
+        return self._left
+
+    @property
+    def right(self) -> Optional["Node"]:
+        return self._right
 
 
-    @property.setter
+    @left.setter
     def left(self, node: Optional["Node"]) -> None:
-        self.left = node
+        self._left = node
         if node is not None:
             node.parent = self
 
-    @property.setter
+    @right.setter
     def right(self, node: Optional["Node"]) -> None:
-        self.right = node
+        self._right = node
         if node is not None:
             node.parent = self
+
+    @parent.setter
+    def parent(self, node: Optional["Node"]) -> None:
+        self._parent = node
 
 
 @dataclass
 class Treap:
     root: Node = None
 
-    
