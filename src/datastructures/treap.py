@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
 @dataclass
 class Node:
@@ -57,8 +57,63 @@ class Node:
 
 @dataclass
 class Treap:
-    _root: Node = None
+    """
+    A treap is a data structure that unites the concept of heap and balanced tree. It keeps keys and priorities.
+    """
+    _comparator: str = "max"
 
+    def __post_init__(self):
+        self._root = None
+        
+        if self._comparator == "max":
+            self._comparator = lambda x, y: x > y
+        elif self._comparator == "min":
+            self._comparator = lambda x, y: x < y
+        else:
+            raise ValueError("The comparator should be 'max' or 'min'.")
+
+    # ******************************* PUBLIC INTERFACE *****************************************
+
+    def search(self, node: Node, target_key: Any) -> Optional[Node]:
+        """
+        Search the target key starting from a node.
+        Running time: O(log(N) base 2).
+
+        Args:
+            node: Node from which to start the search.
+            target_key: key of the node.
+        Return:
+            return the node if the target_key is present, else None.
+        """
+        
+        if node == None:
+            return None
+        
+        if node._key == target_key:
+            return node
+        elif target_key < node._key:
+            return self.search(node.left, target_key)
+        else:
+            return self.search(node.right, target_key)
+        
+
+
+        
+    
+    def contains(self, key: Any) -> bool:
+        """
+        Check if the treap contains a key.
+        Running time: O(log(N) base 2).
+        """
+        return self.search(self._root, key) != None
+
+
+    def empty(self) -> bool:
+        return self._root == None
+
+
+
+    # ******************************* END PUBLIC INTERFACE *****************************************
     
 
 
