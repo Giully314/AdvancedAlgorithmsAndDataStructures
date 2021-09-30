@@ -48,18 +48,23 @@ class Node:
         self._parent = node
 
 
+    def is_root(self) -> bool:
+        return self._parent == None
+
+    def is_leaf(self) -> bool:
+        return self._left == None and self._right == None
+
+
 @dataclass
 class Treap:
     _root: Node = None
 
     
-    def is_root(self, node: Node) -> bool:
-        return node.parent == None
 
 
-    def _right_rotate(self, x: Node):
+    def __right_rotate(self, x: Node):
         #maybe just return?
-        if x == None or self.is_root(x):
+        if x == None or x.is_root():
             raise Exception("Passed node is null or is root.")
 
         y = x.parent
@@ -79,9 +84,9 @@ class Treap:
         x.right = y
 
 
-    def _left_rotate(self, x: Node):
+    def __left_rotate(self, x: Node):
         #maybe just return?
-        if x == None or self.is_root(x):
+        if x == None or x.is_root():
             raise Exception("Passed node is null or is root.")
 
         y = x.parent
