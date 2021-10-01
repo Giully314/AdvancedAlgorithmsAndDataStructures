@@ -228,6 +228,10 @@ class Treap:
 
 
     def min(self) -> Any:
+        """
+        Return the smaller key.
+        Running time: O(log(N) base 2).
+        """
         if self._root == None:
             raise IndexError("The treap is empty.")
 
@@ -238,6 +242,10 @@ class Treap:
 
 
     def max(self) -> Any:
+        """
+        Return the biggest key.
+        Running time: O(log(N) base 2).
+        """
         if self._root == None:
             raise IndexError("The treap is empty.")
 
