@@ -161,6 +161,33 @@ class Treap:
         return True
 
 
+    def peek(self) -> Any:
+        """
+        Return (without removing) the key of the node with the highest priority (the root).
+        Running time: O(1).
+        Return:
+            the key of the node.
+        """
+        if self._root == None:
+            raise IndexError("The treap is empty.")
+        return self._root.key
+
+    
+    def top(self) -> Any:
+        """
+        Return (by removing the node from the treap) the key of the node with the highest priority (the root).
+        Running time: O(log(N) base 2).
+        Return:
+            the key of the node.
+        """
+        if self._root == None:
+            raise IndexError("The treap is empty.")
+            
+        key = self._root.key
+        self.remove(key)
+        return key
+
+
     def search(self, node: Node, target_key: Any) -> Optional[Node]:
         """
         Search the target key starting from a node.
