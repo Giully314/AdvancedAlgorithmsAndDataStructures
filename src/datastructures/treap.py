@@ -122,6 +122,43 @@ class Treap:
             self._root = new_node
         
 
+    def remove(self, key) -> bool:
+        """
+        Remove the node with the passed key, if present.
+        Running time: O(log(N) base 2).
+
+        Args:
+            key: Key of the node.
+        Return:
+            True if there is a node with key and it is removed, else False.
+        """
+        
+        #First, we search through the treap to find if the there exists a node with the passed key. 
+        node = self.search(self._root, key)
+        if node == None: #If the node is not present, return false
+            return False
+        
+        if node.is_root() and node.is_leaf(): #If the treap has only one node
+            self._root = None
+            return True
+        
+        #Here we push down (in the sense of the heap operation) the node that we want to erase, 
+        # until the node become a leaf so we can erase it easily. 
+        while not node.is_leaf():
+            if node.left != None and (node.right == None or self._comparator(node.left.priority, node.right.priority)):
+                self.__right_rotate(node.left)
+            else:
+                self.__left_rotate(node.right)
+
+            if node.parent.is_root():
+                self._root = node.parent
+
+        #Remove the node.
+        if node.parent.left == node:
+            node.parent.left = None
+        else:
+            node.parent.right = None
+        return True
 
 
     def search(self, node: Node, target_key: Any) -> Optional[Node]:
