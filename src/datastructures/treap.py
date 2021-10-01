@@ -219,8 +219,49 @@ class Treap:
         return self.search(self._root, key) != None
 
 
-    def update(self, key, new_priority):
-        pass 
+    #TODO: Check the correctness of this method.
+    def update(self, key, new_priority) -> bool:
+        """
+        Running time: O(log(N) base 2).
+
+        Args:
+            key: key associated to the node that we want to update.
+            new_priority: new priority to use to update.
+        Return:
+            True if the node is updated with the new priority, else false.
+        """
+        node = self.search(key)
+        if node == None:
+            return False
+        
+        old_priority = node.priority
+
+        if old_priority == new_priority:
+            return False
+
+        node.priority = new_priority
+        
+        #We might have violated the priority with respect to the parent (the child has higher priority than the parent).
+        if self._comparator(new_priority, old_priority):  
+            while node.parent != None and self._comparator(node.priority, node.parent.priority):
+                if node == node.parent.left:
+                    self.__right_rotate(node)
+                else:
+                    self.__left_rotate(node)
+        
+            if node.parent == None:
+                self._root = node
+        else: #one of the child might have higher priority than the updated node.
+            while not node.is_leaf():
+                if node.left != None and (node.right == None or self._comparator(node.left.priority, node.right.priority)):
+                    self.__right_rotate(node.left)
+                else:
+                    self.__left_rotate(node.right)
+
+                if node.parent.is_root():
+                    self._root = node.parent
+
+        return True
 
 
     def empty(self) -> bool:
