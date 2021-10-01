@@ -219,10 +219,32 @@ class Treap:
         return self.search(self._root, key) != None
 
 
+    def update(self, key, new_priority):
+        pass 
+
+
     def empty(self) -> bool:
         return self._root == None
 
 
+    def min(self) -> Any:
+        if self._root == None:
+            raise IndexError("The treap is empty.")
+
+        node = self._root
+        while node.left != None:
+            node = node.left
+        return node.key
+
+
+    def max(self) -> Any:
+        if self._root == None:
+            raise IndexError("The treap is empty.")
+
+        node = self._root
+        while node.right != None:
+            node = node.right
+        return node.key
 
     # ******************************* END PUBLIC INTERFACE *****************************************
     
