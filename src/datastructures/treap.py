@@ -11,8 +11,8 @@ class Node:
     left, right, parent: objects of class Node. They can also be None.
     """
 
-    _key: Any
-    _priority: float
+    key: Any
+    priority: float
     _parent: Optional["Node"] = None
     _left: Optional["Node"] = None
     _right: Optional["Node"] = None
@@ -55,24 +55,74 @@ class Node:
         return self._left == None and self._right == None
 
 
-@dataclass
+
 class Treap:
     """
     A treap is a data structure that unites the concept of heap and balanced tree. It keeps keys and priorities.
     """
-    _comparator: str = "max"
 
-    def __post_init__(self):
+
+    def __init__(self, heap_comparator: str = "max"):
+        """
+        Args:
+            heap_comparator: 'max' for a max heap, 'min' for a min heap. 
+            Note: if comparator(x, y) is true it means that x has "higher" priority than y, where "higher" means that x is more important
+            than y. 
+        """
+
         self._root = None
-        
-        if self._comparator == "max":
+        self._comparator: Callable[[int, int], bool] = None
+        if heap_comparator == "max":
             self._comparator = lambda x, y: x > y
-        elif self._comparator == "min":
+        elif heap_comparator == "min":
             self._comparator = lambda x, y: x < y
         else:
             raise ValueError("The comparator should be 'max' or 'min'.")
 
     # ******************************* PUBLIC INTERFACE *****************************************
+
+    def insert(self, key: Any, priority: int) -> None:
+        """
+        Insert a node respecting the BST invariant and then rotate to adjust the heap invariant.
+        Running time: O(log(N) base 2).
+
+        Args:
+            key: Key to insert. (Should be of the same type of the other keys and should provide a comparator method)
+            priority: priority associated to the key.
+        """
+
+        node = self._root
+        parent = None
+        new_node = Node(key, priority)
+
+        #First we go through the whole tree to search the right place of the node based on the key.
+        while node != None:
+            parent = node
+            if node.key <= key:
+                node = node.left
+            else:
+                node = node.right
+            
+        if parent == None:
+            self._root = new_node
+            return
+        elif key <= parent.key:
+            parent.left = new_node
+        else:
+            parent.right = new_node
+        
+        #After inserting the node in the right place, we use rotation to restore the heap invariant.
+        while new_node.parent != None and self._comparator(new_node.priority, new_node.parent.priority):
+            if new_node == new_node.parent.left:
+                self.__right_rotate(new_node)
+            else:
+                self.__left_rotate(new_node)
+        
+        if new_node.parent == None:
+            self._root = new_node
+        
+
+
 
     def search(self, node: Node, target_key: Any) -> Optional[Node]:
         """
@@ -95,9 +145,6 @@ class Treap:
             return self.search(node.left, target_key)
         else:
             return self.search(node.right, target_key)
-        
-
-
         
     
     def contains(self, key: Any) -> bool:
