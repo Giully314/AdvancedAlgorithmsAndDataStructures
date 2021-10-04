@@ -17,48 +17,46 @@ class Node:
     _left: Optional["Node"] = None
     _right: Optional["Node"] = None
 
-    
-    @property
-    def parent(self) -> Optional["Node"]:
-        return self._parent
-    
-    @property
-    def left(self) -> Optional["Node"]:
-        return self._left
 
-    @property
-    def right(self) -> Optional["Node"]:
-        return self._right
-
-
-    @left.setter
-    def left(self, node: Optional["Node"]) -> None:
+    def set_left(self, node: Optional["Node"]) -> None:
         self._left = node
         if node is not None:
-            node.parent = self
+            node._parent = self
 
-    @right.setter
-    def right(self, node: Optional["Node"]) -> None:
+    def set_right(self, node: Optional["Node"]) -> None:
         self._right = node
         if node is not None:
-            node.parent = self
-
-    @parent.setter
-    def parent(self, node: Optional["Node"]) -> None:
-        self._parent = node
+            node._parent = self
 
 
     def is_root(self) -> bool:
-        return self._parent == None
+        return self._parent is None
 
     def is_leaf(self) -> bool:
-        return self._left == None and self._right == None
+        return self._left is None and self._right is None
 
+    
+    def __eq__(self, other: Optional["Node"]) -> bool:
+        return self.key == other.key and self.priority == other.priority
+
+
+    def __str__(self, level=0):
+        ret = "\t"*level+ f"({self.key} {self.priority})" +"\n"
+        for child in [self._left, self._right]:
+            if child is None:
+                ret += "\n"
+                continue
+            ret += child.__str__(level+1)
+        return ret
 
 
 class Treap:
     """
     A treap is a data structure that unites the concept of heap and balanced tree. It keeps keys and priorities.
+    The invariants of a treap are:
+    1) Every left subtree of a node N has key valus less than N.key (for the right subtree is greater).
+    2) Given a node N, the priority of N is greater than the subtree rooted at N. 
+    3) Each node has at most 2 children.
     """
 
 
@@ -72,6 +70,7 @@ class Treap:
 
         self._root = None
         self._comparator: Callable[[int, int], bool] = None
+        self.size = 0
         if heap_comparator == "max":
             self._comparator = lambda x, y: x > y
         elif heap_comparator == "min":
@@ -91,34 +90,35 @@ class Treap:
             priority: priority associated to the key.
         """
 
-        node = self._root
-        parent = None
+        node: Node = self._root
+        parent: Node = None
         new_node = Node(key, priority)
+        self.size += 1
 
         #First we go through the whole tree to search the right place of the node based on the key.
-        while node != None:
+        while node is not None:
             parent = node
-            if node.key <= key:
-                node = node.left
+            if key <= node.key:
+                node = node._left
             else:
-                node = node.right
+                node = node._right
             
-        if parent == None:
+        if parent is None:
             self._root = new_node
             return
         elif key <= parent.key:
-            parent.left = new_node
+            parent.set_left(new_node)
         else:
-            parent.right = new_node
-        
+            parent.set_right(new_node)
+           
         #After inserting the node in the right place, we use rotation to restore the heap invariant.
-        while new_node.parent != None and self._comparator(new_node.priority, new_node.parent.priority):
-            if new_node == new_node.parent.left:
-                self.__right_rotate(new_node)
+        while new_node._parent is not None and self._comparator(new_node.priority, new_node._parent.priority):
+            if new_node is new_node._parent._left:
+                new_node = self.__right_rotate(new_node)
             else:
-                self.__left_rotate(new_node)
-        
-        if new_node.parent == None:
+                new_node = self.__left_rotate(new_node)
+
+        if new_node._parent is None:
             self._root = new_node
         
 
@@ -135,9 +135,10 @@ class Treap:
         
         #First, we search through the treap to find if the there exists a node with the passed key. 
         node = self.search(self._root, key)
-        if node == None: #If the node is not present, return false
+        if node is None: #If the node is not present, return false
             return False
         
+        self.size -= 1
         if node.is_root() and node.is_leaf(): #If the treap has only one node
             self._root = None
             return True
@@ -145,19 +146,19 @@ class Treap:
         #Here we push down (in the sense of the heap operation) the node that we want to erase, 
         # until the node become a leaf so we can erase it easily. 
         while not node.is_leaf():
-            if node.left != None and (node.right == None or self._comparator(node.left.priority, node.right.priority)):
-                self.__right_rotate(node.left)
+            if node._left is not None and (node._right is None or self._comparator(node._left.priority, node._right.priority)):
+                self.__right_rotate(node._left)
             else:
-                self.__left_rotate(node.right)
+                self.__left_rotate(node._right)
 
-            if node.parent.is_root():
-                self._root = node.parent
+            if node._parent.is_root():
+                self._root = node._parent
 
         #Remove the node.
-        if node.parent.left == node:
-            node.parent.left = None
+        if node._parent._left is node:
+            node._parent._left = None
         else:
-            node.parent.right = None
+            node._parent._right = None
         return True
 
 
@@ -168,7 +169,7 @@ class Treap:
         Return:
             the key of the node.
         """
-        if self._root == None:
+        if self._root is None:
             raise IndexError("The treap is empty.")
         return self._root.key
 
@@ -180,7 +181,7 @@ class Treap:
         Return:
             the key of the node.
         """
-        if self._root == None:
+        if self._root is None:
             raise IndexError("The treap is empty.")
             
         key = self._root.key
@@ -200,15 +201,15 @@ class Treap:
             return the node if the target_key is present, else None.
         """
         
-        if node == None:
+        if node is None:
             return None
         
-        if node._key == target_key:
+        if node.key is target_key:
             return node
-        elif target_key < node._key:
-            return self.search(node.left, target_key)
+        elif target_key < node.key:
+            return self.search(node._left, target_key)
         else:
-            return self.search(node.right, target_key)
+            return self.search(node._right, target_key)
         
     
     def contains(self, key: Any) -> bool:
@@ -216,10 +217,10 @@ class Treap:
         Check if the treap contains a key.
         Running time: O(log(N) base 2).
         """
-        return self.search(self._root, key) != None
+        return self.search(self._root, key) is not None
 
 
-    #TODO: Check the correctness of this method.
+    #TODO: This method is wrong. Solve the issue.
     def update(self, key, new_priority) -> bool:
         """
         Running time: O(log(N) base 2).
@@ -230,8 +231,8 @@ class Treap:
         Return:
             True if the node is updated with the new priority, else false.
         """
-        node = self.search(key)
-        if node == None:
+        node = self.search(self._root, key)
+        if node is None:
             return False
         
         old_priority = node.priority
@@ -243,29 +244,29 @@ class Treap:
         
         #We might have violated the priority with respect to the parent (the child has higher priority than the parent).
         if self._comparator(new_priority, old_priority):  
-            while node.parent != None and self._comparator(node.priority, node.parent.priority):
-                if node == node.parent.left:
-                    self.__right_rotate(node)
+            while node._parent is not None and self._comparator(node.priority, node._parent.priority):
+                if node is node._parent._left:
+                    node = self.__right_rotate(node)
                 else:
-                    self.__left_rotate(node)
+                    node = self.__left_rotate(node)
         
-            if node.parent == None:
+            if node._parent is None:
                 self._root = node
         else: #one of the child might have higher priority than the updated node.
             while not node.is_leaf():
-                if node.left != None and (node.right == None or self._comparator(node.left.priority, node.right.priority)):
-                    self.__right_rotate(node.left)
+                if node._left is not None and (node._right is None or self._comparator(node._left.priority, node._right.priority)):
+                    node = self.__right_rotate(node._left)
                 else:
-                    self.__left_rotate(node.right)
+                    self.__left_rotate(node._right)
 
-                if node.parent.is_root():
-                    self._root = node.parent
+                if node._parent.is_root():
+                    self._root = node._parent
 
         return True
 
 
     def empty(self) -> bool:
-        return self._root == None
+        return self._root is None
 
 
     def min(self) -> Any:
@@ -273,12 +274,12 @@ class Treap:
         Return the smaller key.
         Running time: O(log(N) base 2).
         """
-        if self._root == None:
+        if self._root is None:
             raise IndexError("The treap is empty.")
 
         node = self._root
-        while node.left != None:
-            node = node.left
+        while node._left is not None:
+            node = node._left
         return node.key
 
 
@@ -287,57 +288,99 @@ class Treap:
         Return the biggest key.
         Running time: O(log(N) base 2).
         """
-        if self._root == None:
+        if self._root is None:
             raise IndexError("The treap is empty.")
 
         node = self._root
-        while node.right != None:
-            node = node.right
+        while node._right is not None:
+            node = node._right
         return node.key
+
+
+    def __len__(self):
+        return self.size
 
     # ******************************* END PUBLIC INTERFACE *****************************************
     
 
 
-    def __right_rotate(self, x: Node):
-        #maybe just return?
-        if x == None or x.is_root():
+    def __right_rotate(self, x: Node) -> Node:
+        if x is None or x.is_root():
             raise Exception("Passed node is null or is root.")
 
-        y = x.parent
-        if y.left != x:
+        y: Node = x._parent
+        if y._left is not x:
             raise Exception("Right rotation can only be applied to a left child.")
 
-        p = y.parent
-        if p == None:
+        p: Node = y._parent
+        if p is None:
             self._root = x
+            x._parent = None
         else:
-            if p.left == y:
-                p.left = x
+            if p._left is y:
+                p.set_left(x)
             else:
-                p.right = x
+                p.set_right(x)
 
-        y.left = x.right
-        x.right = y
+        y.set_left(x._right)
+        x.set_right(y)
+
+        return x
 
 
-    def __left_rotate(self, x: Node):
-        #maybe just return?
-        if x == None or x.is_root():
+    def __left_rotate(self, x: Node) -> Node:
+        if x is None or x.is_root():
             raise Exception("Passed node is null or is root.")
 
-        y = x.parent
-        if y.right != x:
+        y: Node = x._parent
+        if y._right is not x:
             raise Exception("Left rotation can only be applied to a right child.")
 
-        p = y.parent
-        if p == None:
+        p: Node = y._parent
+        if p is None:
             self._root = x
+            x._parent = None
         else:
-            if p.left == y:
-                p.left = x
+            if p._left is y:
+                p.set_left(x)
             else:
-                p.right = x
+                p.set_right(x)
 
-        y.right = x.left
-        x.left = y
+        y.set_right(x._left)
+        x.set_left(y)
+
+        return x
+
+
+    def _validate(self):
+        """
+        Validate the treap. Check:
+        1) the key of the left/right children is less/greater than the parent.
+        2) the priority of the parent is higher than the priority of the children.
+        """
+        def tree_walk(node: Node):
+            if node is None:
+                return
+
+            if node._left is not None:
+                if node.key < node._left.key:
+                    print(f"Violation of key invariant node left {node}")
+                    return
+                if self._comparator(node._left.priority, node.priority):
+                    print(f"Violation of priority invariant node left{node}")
+                    return
+                
+                tree_walk(node._left)
+
+            if node._right is not None:
+                if node.key > node._right.key:
+                    print(f"Violation of key invariant node right {node}")
+                    return
+                if self._comparator(node._right.priority, node.priority):
+                    print(f"Violation of priority invariant node right{node}")
+                    return
+            
+                tree_walk(node._right)
+
+
+        tree_walk(self._root)
