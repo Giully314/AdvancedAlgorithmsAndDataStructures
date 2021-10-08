@@ -1,4 +1,6 @@
+from dataclasses import dataclass, field
 from typing import Any, Iterable
+
 
 class DisjointSetArray:
     """
@@ -95,3 +97,100 @@ class DisjointSetArray:
         return True
 
 
+
+class Info:
+    def __init__(self, elem: Any):
+        if elem is None:
+            raise ValueError("Passed element is None")
+        
+        self.root = elem
+        self.rank = 1
+
+@dataclass
+class DisjointSet:
+    """
+    Implementation of disjoint set using path compression. This implementation offers efficient performance on
+    merge and find partition as compared to the version using array or tree as underlying container.
+    """
+    parents_map: dict[Any, Info] = field(default_factory=dict, init=False)
+    
+
+    def add(self, elem: Any) -> bool:
+        """
+        Running time: O(1).
+        Args:
+            elem: the element should be of the same type as the others.
+        Return:
+            true if the element is inserted, false if the element is already present.
+        """
+
+        if elem in self.partions_map:
+            return False
+
+        self.partions_map[elem] = Info(elem)
+        return True
+
+    
+    def are_disjoint(self, elem1: Any, elem2: Any) -> bool:
+        """
+        Check if the 2 elements are in the same partition.
+        Ammortized running time: The running time is the same as the find_partion function; in the best case is O(1).
+        Args:
+            elem1 and elem2 are used to retrieve the associated partions.
+        Return:
+            Return true if the elements are not in the same partion, false otherwise.
+        """
+        p1 = self.find_partition(elem1)
+        p2 = self.find_partition(elem2)
+        return p1 is not p2
+
+
+    def find_partition(self, elem: Any) -> Any:
+        """
+        Return the partition of the passed element.
+        Ammortized Running time: O(m * Ack(n)) where m is the number of times we call the function, Ack is the inverse of Ackermann,
+            n is the number of elements in the set. Should be noted that Ack(n) can be considered constant because its value is lower
+            than 5 for any integer that can be stored in a computer.  
+        Args:
+            elem: element to check the partition. If not present, the method raise an exception.
+        Return:
+            return the partition associated to the element.
+        """
+        if elem not in self.parents_map:
+            raise IndexError("Elem is not present.")
+
+        info = self.parents_map[elem]
+        if info.root is elem:
+            return elem
+
+        info.root = self.find_partition(info.root)
+        return info.root
+
+
+    def merge(self, elem1: Any, elem2: Any) -> bool:
+        """
+        Merge the 2 partitions associated to the 2 passed elements.
+        Ammortized running time: The running time is the same as the find_partion function; in the best case is O(1).
+        Args:
+            elem1 and elem2 are used to retrieve the associated partions.
+        Return:
+            True if the merge success, false if the 2 partions are equal.
+        """
+        
+        r1 = self.find_partition(elem1)
+        r2 = self.find_partition(elem2)
+
+        if r1 is r2:
+            return False
+
+        info1 = self.parents_map[r1]
+        info2 = self.parents_map[r2]
+
+        if info1.rank >= info2.rank:
+            info2.root = info1.root
+            info1.rank += info2.rank
+        else:
+            info1.root = info2.root
+            info2.rank += info1.rank
+        
+        return True
