@@ -106,6 +106,8 @@ class Info:
         self.root = elem
         self.rank = 1
 
+
+#TODO: test and performance.
 @dataclass
 class DisjointSet:
     """
