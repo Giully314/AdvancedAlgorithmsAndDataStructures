@@ -7,25 +7,14 @@
 #include <iostream>
 #include <cmath>
 
+#include "debug.hpp"
+
 /*TODO: refactor the code to maximize cache usage. I can split elements and priorities into 2 vectors.
 Because most of the time we work only with priorities, we can maximize the number of priorities we put into
 the cache in one operation.
 If i keep elements and priorities into a vector of pairs, when i use PushDown or BubbleUp, i put into the cache
 useless information (the elements) while i need to work only on priorities.
 */
-
-#define DEBUG
-
-#ifdef DEBUG
-#define LOG(x)         std::cout << x << std::endl
-#define ENTER(x)       std::cout << "enter " << x << std::endl
-#define EXIT(x)        std::cout << "exit " << s << std::endl
-
-#else
-#define LOG(x)        
-#define ENTER(x)      
-#define EXIT(x)        
-#endif
 
 
 
