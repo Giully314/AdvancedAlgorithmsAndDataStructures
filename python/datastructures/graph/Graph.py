@@ -1,247 +1,196 @@
 from dataclasses import dataclass, field
-from typing import Callable, Any, Optional
-import math
-import dheap
-from python.datastructures.dheap import DHeap
-from functools import reduce
+from typing import Any, Optional, Callable
+from collections import deque
+from graphviz import Digraph
+from dheap import DHeap
 
-#this class is not for use in a program. It doesn't work. I implemented the methods only to understand what is going on.
+# This file implements a SIMPLE graph, used only for education purpose.
 
-@dataclass
-class Vertex:
+
+@dataclass(frozen=True)
+class Node:
+    value: Any
+    label: str
+
+
+@dataclass(frozen=True)
+class Edge:
+    source: Node
+    dest: Node
+    value: int
     label: str
 
 
 @dataclass
-class Edge:
-    source: Vertex
-    dest: Vertex
-    weight: float
-    label: str 
-
-@dataclass 
 class Graph:
-    vertices: list[Vertex] = field(default_factory=list)
-
-    #i could use a set instaed of list to improve computation complexity some basic operations  
-    adjacency_list: dict[Vertex, list[Edge]] = field(default_factory=dict)
+    nodes: list[Node] = field(default_factory=list)
+    edges: dict[Node, list[Edge]] = field(default_factory=dict)
 
 
-    def add_vertex(self, v: Vertex) -> None:
-        #TODO: throw or return if the vertex is already in the graph? 
+    def add_node(self, value: Any, label: str ="") -> Node:
+        if value in self:
+            return 
 
-        self.vertices.append(v)
-        self.adjacency_list[v] = []
-
-
-    def remove_vertex(self, v):
-        ...
-
-
-    def add_edge(self, v: Vertex, u: Vertex, weight: float = 0, label: str = "") -> None:
-        #TODO: throw or return if v and u are not in the graph?
-
-        if self.are_adjacent(v, u):
-            self.remove_edge(v, u)
-
-        self.adjacency_list[v].append(Edge(v, u, weight, label))
+        node = Node(value, label)
+        self.nodes.append(node)
+        self.edges[node] = []
+        return node
 
 
-    def are_adjacent(self, v: Vertex, u: Vertex) -> bool:
-        if u in self.adjacency_list[v]:
-            return True
-        return False
-
-
-    def remove_edge(self, v: Vertex, u: Vertex) -> None:
-        for edge in self.adjacency_list[v]:
-            if edge.source is v and edge.dest is u:
-                break 
-        self.adjacency_list[v].remove(edge)
-
-
-    """
-    Running time: O(|V| + |E|)
-    """
-    def bfs(self, source: Vertex, is_goal: Callable[[Vertex], bool]) -> tuple[Vertex, dict[Vertex, Vertex]]:
-        queue = []
-        queue.append(source)
-        distances = {}
-        parents = {}
-
-        #init data
-        for v in self.vertices:
-            distances[v] = math.inf
-            parents[v] = None
-
-        distances[source] = 0
-
-        while len(queue) > 0:
-            v = queue.pop()
-
-            if is_goal(v):
-                return (v, parents)
-
-            for e in self.adjacency_list[v]:
-                u = e.dest
-
-                if distances[u] == math.inf:
-                    distances[u] = distances[v] + 1
-                    parents[u] = v
-                    queue.append(u)
+    def add_edge(self, source_node: Node, dest_node: Node, value: int = 1, label= ""):
+        if source_node not in self and dest_node not in self:
+            return
         
-        return (None, parents)
+        edge = Edge(source_node, dest_node, value, label)
+        self.edges[source_node].append(edge)
 
 
-    def dfs(self) -> tuple[dict[Vertex, int], dict[Vertex, int]]:
-        time = 0
+    def bfs(self, start_node: Node, goal_func: Callable[[Node], bool] = None) -> tuple[Optional[Node], dict[Node, Optional[Node]]]:
+        queue: deque[Node] = deque()
+        queue.append(start_node)
+        distances: dict[Node, float] = dict()
+        parents: dict[Node, Optional[Node]] = dict()
 
-        distances = {}
-        parents = {}
-        for v in self.vertices:
-            distances[v] = math.inf
-            parents[v] = None
-
-        for v in self.vertices:
-            if in_time[v] is None:
-                time, in_time, out_time = self._dfs_helper(v, time, in_time, out_time)
+        for node in self.nodes:
+            distances[node] = float("inf")
+            parents[node] = None
+        distances[start_node] = 0
         
-        return (in_time, out_time)
-
-
-    def _dfs_helper(self, v: Vertex, time: int , in_time: dict, out_time: dict) -> tuple[int, dict[Vertex, int], dict[Vertex, int]]:
-        time += 1
-        in_time[v] = time
-        
-        for e in self.adjacency_list[v]:
-            u = e.dest
-            if in_time[u] is None:
-                time, in_time, out_time = self._dfs_helper(u, time, in_time, out_time)
-        
-        time += 1
-        out_time[v] = time
-        return (time, in_time, out_time)
-
-
-
-    def dijkstra(self, source: Vertex, is_goal: Callable[[Vertex], bool]):        
-        prio_queue = DHeap(2, "min")
-        prio_queue.insert(source, 0)
-        # distances = {v : math.inf for v in self.vertices}
-        # parents = {v : None for v in self.vertices}
-        distances = {}
-        parents = {}
-
-        for v in self.vertices:
-            distances[v] = math.inf
-            parents[v] = None
-
-        distances[source] = 0
-
-        while len(prio_queue) > 0:
-            v = prio_queue.top()
-
-            if is_goal(v):
-                return (v, parents)
+        while queue:
+            u = queue.popleft()
+            if goal_func is not None and goal_func(u):
+                return (u, parents)
             
-            for e in self.adjacency_list[v]:
-                u = e.dest
-                #relax operation
-                if distances[u] > distances[v] + e.weight:
-                    distances[u] = distances[v] + e.weight
-                    parents[u] = v
-                    prio_queue.update(u, distances[u])
+            for e in self.edges[u]:
+                v = e.dest
+                if distances[v] == float("inf"):
+                    distances[v] = distances[u] + 1
+                    parents[v] = u
+                    queue.append(v)
 
         return (None, parents)
     
 
-    """
-    a_star is complete (finite number of vertices visited) if the heuristic is: 
-    1) admissable (never overestimates the cost to reach the goal), 
-    2) consistent (heuristic(u) <= heuristic(v) + distance(v, u)) where v is a generic node and u and adjacent node of v.
-    heuristic is a function that estimates the cost to reach the goal from a given vertex.
-    distance is a function that measure the distance between 2 adjacent vertices.
-    """
-    def a_star(self, source: Vertex, is_goal: Callable[[Vertex], bool], distance: Callable, heuristic: Callable):        
-        prio_queue = DHeap(2, "min")
-        prio_queue.insert(source, 0)
-        # distances = {v : math.inf for v in self.vertices}
-        # parents = {v : None for v in self.vertices}
-        distances = {}
-        parents = {}
-        f_score = {}
+    def dfs(self, start_node: Node) -> tuple[int]:
+        stack: list[Node] = []
+        stack.append(start_node)
+        in_time: dict[Node, float] = {}
+        out_time: dict[Node, float] = {}
+        time = 0
+        for node in self.nodes:
+            in_time[node] = None
+            out_time[node] = None
+    
+        while stack:
+            time += 1
+            u = stack.pop()
+            for e in self.edges[u]:
+                v = e.dest
+                if in_time[v] == None:
+                    in_time[v] = time
+                    stack.append(v)
+            time += 1
+            out_time[u] = time
+        return (in_time, out_time) 
 
-        for v in self.vertices:
-            distances[v] = math.inf
-            parents[v] = None
-            f_score[v] = math.inf
 
+    def dijkstra(self, start_node: Node, 
+                 goal_func: Callable[[Node], bool] = None) -> tuple[Optional[Node], dict[Node, Optional[Node]]]:
+        queue = DHeap(comparator="min")
+        distances: dict[Node, float] = dict()
+        parents: dict[Node, Optional[Node]] = dict()
+        for node in self.nodes:
+            distances[node] = float("inf")
+            parents[node] = None
+            queue.insert(node, float("inf"))
+        queue.update(start_node, 0)
+        distances[start_node] = 0
 
-        distances[source] = 0
-        f_score[source] = heuristic(source)
-
-        while len(prio_queue) > 0:
-            v = prio_queue.top()
-
-            if is_goal(v):
-                return (v, parents)
+        while queue:
+            u = queue.top()
+            if goal_func is not None and goal_func(u):
+                return (u, parents)
             
-            for e in self.adjacency_list[v]:
-                u = e.dest
-                #relax operation
-                if distances[u] > distances[v] + distance(e):
-                    distances[u] = distances[v] + distance(e)
-                    f_score = distances[u] + heuristic(u)
-                    parents[u] = v
-                    prio_queue.update(u, f_score[u])
+            for e in self.edges[u]:
+                v = e.dest
+                if distances[v] > distances[u] + e.value:
+                    distances[v] = distances[u] + e.value 
+                    parents[v] = u
+                    queue.update(v, distances[v])
 
         return (None, parents)
 
-    def components(self) -> Optional["Graph"]:
-        ...
 
-    def kurtowsky_planarity(self):
-        if len(self.vertices) < 5:
-            return True 
-        
-        if self.violates_euler_constraints():
-            return False
-        
-        if self.is_k5() or self.is_k3_3():
-            return False
+    def a_star(self, start_node: Node, 
+                 goal_func: Callable[[Node], bool],
+                 distance: Callable[[Edge], float],
+                 heuristic: Callable[[Node], float]) -> tuple[Optional[Node], dict[Node, Optional[Node]]]:
+        queue = DHeap(comparator="min")
+        distances: dict[Node, float] = {}
+        parents: dict[Node, Optional[Node]] = {}
+        fscore: dict[Node, float] = {} # sum of distance and heuristic, used as priority in the queue
+        for node in self.nodes:
+            distances[node] = float("inf")
+            parents[node] = None
+            fscore[node] = float("inf")
+            queue.insert(node, float("inf"))
+        queue.update(start_node, 0)
+        distances[start_node] = 0
+        fscore[start_node] = heuristic(start_node)
 
-        for v in self.vertices:
-            sub_g = self.remove_vertex(v)
-            if not sub_g.kurtowsky_planarity():
-                return False
+        while queue:
+            u = queue.top()
+            if goal_func is not None and goal_func(u):
+                return (u, parents)
+            
+            for e in self.edges[u]:
+                v = e.dest
+                dist_e = distance(e)
+                if distances[v] > distances[u] + dist_e:
+                    distances[v] = distances[u] + dist_e
+                    parents[v] = u
+                    fscore[v] = distances[v] + heuristic(v)
+                    queue.update(v, fscore[v])
 
-        for v in self.vertices:
-            for e in self.adjacency_list[v]:
-                sub_b = self.remove_edge(e)
-                if not sub_g.kurtowsky_planarity():
-                    return False
-
-        return True
-
-
-
-
-    def planarity_testing(self):
-        components = self.components()
-        for g in components:
-            if not g.is_planar(g):
-                return False
-        return True
+        return (None, parents)
 
 
-    def violates_euler_constraints(self) -> bool:
-        n, m = len(self.vertices), reduce(lambda count, l: count + len(l), self.adjacency_list.values(), 0)
-        if n < 3:
-            return True
+    def get_node(self, value: Any) -> Optional[Node]:
+        for node in self.nodes:
+            if node.value == value:
+                return node
+        return None
 
-        if m <= 3 * n - 6:
-            return True
-        #there is another condition that should be checked, but it is based on cycles and it's hard to compute
+    def __contains__(self, value: Any) -> bool:
+        for node in self.nodes:
+            if node.value == value:
+                return True
         return False
+    
+    def printable_repr(self) -> tuple[set[Node], set[tuple[Node, Node]]]:
+        nodes: set[Node] = set()
+        edges: set[tuple[Node, Node]] = set()
+        for node in self.nodes:
+            nodes.add(node)
+            for e in self.edges[node]:
+                edges.add((e.source, e.dest))
 
+        return nodes, edges
+    
 
+def show(graph: Graph, format='svg', rankdir='LR'):
+    """
+    format: png | svg | ...
+    rankdir: TB (top to bottom graph) | LR (left to right)
+    """
+    assert rankdir in ['LR', 'TB']
+    nodes, edges = graph.printable_repr()
+    dot = Digraph(format=format, graph_attr={'rankdir': rankdir}) 
+    
+    for n in nodes:
+        dot.node(name=str(id(n)), label = f"{n.label} | {n.value}", shape='record')
+        
+    for n1, n2 in edges:
+        dot.edge(str(id(n1)), str(id(n2)))
+    
+    return dot
