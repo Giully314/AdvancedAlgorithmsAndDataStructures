@@ -2,14 +2,24 @@ from dataclasses import dataclass
 from typing import Callable
 import random
 from operator import itemgetter
-
+from abc import ABC, abstractmethod
 
 @dataclass
-class Individual:
+class Individual(ABC):
     chromosome: list[int]
 
+    @abstractmethod
     def fitness(self):
         ...
+
+    def __getitem__(self, idx) -> int:
+        return self.chromosome[idx]
+
+    def __setitem__(self, idx, value):
+        self.chromosome[idx] = value
+
+    def __len__(self) -> int:
+        return len(self.chromosome)
 
 
 @dataclass 
@@ -43,7 +53,7 @@ class MutationOperator:
         if random.random() < self.chance:
             self.mutation_method(x, self.mutation_chance) 
 
-def init_population(size: int, chromosome_init: Callable[[], list[int]]) -> list[Individual]:
+def init_population(size: int, chromosome_init: Callable[[], list[Individual]]) -> list[Individual]:
     population: list[Individual] = []
     for _ in range(size):
         population.append(chromosome_init())
@@ -82,6 +92,6 @@ def tournament_selection(population: list[Individual], k: int):
     like in the wheel selection but more expansive).
     """
     chosen_individuals = random.choices(population, k=k)
-    fitnesses = [x.fitness for x in chosen_individuals]
+    fitnesses = [x.fitness() for x in chosen_individuals]
     idx, value = max(enumerate(fitnesses), key=itemgetter(1))
     return chosen_individuals[idx] 
